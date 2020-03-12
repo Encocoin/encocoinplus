@@ -1886,13 +1886,32 @@ CAmount CWallet::GetImmatureCollateral() const
     //             nTotal+= out.tx->vout[out.i].nValue;
     //         }
     // }
-
+    int checkMasterNodeCollateralLevel = 0;
     for(COutput& out : vCoins){
-         if (out.tx->vout[out.i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            if (checkMasterNodeCollateralLevel == 1)
+        {
+            if(out.tx->vout[out.i].nValue == 550 * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
+                nTotal += out.tx->vout[out.i].nValue;
+        }
+        else if (checkMasterNodeCollateralLevel == 2)
+        {
+            if(((out.tx->vout[out.i].nValue == 1000 * COIN) || (out.tx->vout[out.i].nValue == 2500 * COIN) || (out.tx->vout[out.i].nValue == 3500 * COIN)) && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
+               nTotal += out.tx->vout[out.i].nValue;
+        }
+        else if (checkMasterNodeCollateralLevel == 3)
+        {
+             if(out.tx->vout[out.i].nValue == 250 * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
+                nTotal += out.tx->vout[out.i].nValue;
+        }
+
+        /* if (out.tx->vout[out.i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
             && chainActive.Height() > Params().CollateralMaturityEnforcementHeight())
             { //exactly
                 nTotal += out.tx->vout[out.i].nValue;
-            }
+            }*/
     };
     return nTotal;
 }
@@ -2233,7 +2252,7 @@ bool CWallet::MintableCoins()
 
         int64_t time = GetAdjustedTime();
         for (const COutput& out : vCoins) {
-    
+
             if (out.Value() <= nMinAmount)
                 continue;
 
@@ -2756,7 +2775,7 @@ bool CWallet::CreateCoinStake(
         pStakerStatus->SetLastTime(nTxNewTime);
 
         if (!fKernelFound) continue;
-  
+
             // Found a kernel
             LogPrintf("CreateCoinStake : kernel found\n");
             nCredit += stakeInput->GetValue();

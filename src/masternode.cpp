@@ -387,7 +387,23 @@ bool CMasternode::IsInputAssociatedWithPubkey(int nTargetHeight) const
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
         for (CTxOut out : txVin.vout) {
-            if (out.nValue == Params().GetRequiredMasternodeCollateral(nTargetHeight) * COIN && out.scriptPubKey == payee) return true;
+            int checkMasterNodeCollateralLevel = 0;
+            checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
+            if (checkMasterNodeCollateralLevel == 1)
+            {
+                if(out.nValue == 550 * COIN)
+                return true;
+            }
+            else if (checkMasterNodeCollateralLevel == 2)
+            {
+                if((out.nValue == 1000 * COIN) || (out.nValue == 2500 * COIN) || (out.nValue == 3500 * COIN))
+                return true;
+            }
+            else if (checkMasterNodeCollateralLevel == 3)
+            {
+                if(out.nValue == 250 * COIN)
+                return true;
+            }
         }
     }
 
@@ -716,10 +732,39 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
         else
             mnodeman.Remove(pmn->vin);
     }
+    CTransaction txVin;
+        uint256 hash;
+        CAmount masterNodeVout = 0;
+        int checkMasterNodeCollateralLevel = 0;
+        checkMasterNodeCollateralLevel = ((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN);
+        if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
+            for (CTxOut out : txVin.vout) {
 
+                if (checkMasterNodeCollateralLevel == 1)
+                {
+                     masterNodeVout = 550 ;
+                }
+                else if (checkMasterNodeCollateralLevel == 2)
+                {
+                    if (out.nValue >550 * COIN && out.nValue <= 1000 * COIN)
+                    {
+                        masterNodeVout = 1000 ;
+                    }else if(out.nValue >1000 * COIN && out.nValue <= 2500 * COIN){
+                        masterNodeVout = 2500 ;
+                    }else if(out.nValue >2500 *COIN ){
+                        masterNodeVout = 3500 ;
+                    }else{
+                        masterNodeVout = 3500 ;
+                    }
+                }
+                else if (checkMasterNodeCollateralLevel == 3){
+                    masterNodeVout = 250 ;
+                }
+            }
+         }
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN, obfuScationPool.collateralPubKey);
+    CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(masterNodeVout) * COIN), obfuScationPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 
