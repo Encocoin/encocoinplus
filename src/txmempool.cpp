@@ -482,38 +482,14 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache* pcoins, unsigned in
                 transactionsToRemove.push_back(tx);
                 break;
             }
-            int checkMasterNodeCollateralLevel = 0;
-            CAmount balCheck;
-            checkMasterNodeCollateralLevel = (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
-            if (checkMasterNodeCollateralLevel == 1)
-            {
-                if(coins->vout[txin.prevout.n].nValue == 550 * COIN && nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()
-                && nMemPoolHeight > Params().CollateralMaturityEnforcementHeight())
-                transactionsToRemove.push_back(tx);
-                break;
-            }
-            else if (checkMasterNodeCollateralLevel == 2)
-                {
-                if(((coins->vout[txin.prevout.n].nValue == 1000 * COIN) || (coins->vout[txin.prevout.n].nValue == 2500 * COIN) || (coins->vout[txin.prevout.n].nValue == 3500 * COIN)) && (nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()
-                && nMemPoolHeight > Params().CollateralMaturityEnforcementHeight()))
-                transactionsToRemove.push_back(tx);
-                break;
-                }
-            else if (checkMasterNodeCollateralLevel == 3)
-                {
-                if(coins->vout[txin.prevout.n].nValue == 250 * COIN && nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()
-                && nMemPoolHeight > Params().CollateralMaturityEnforcementHeight())
-                transactionsToRemove.push_back(tx);
-                break;
-                }
-          /* if (coins->vout[txin.prevout.n].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN
+           if (coins->vout[txin.prevout.n].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN
                 && nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()
                 && nMemPoolHeight > Params().CollateralMaturityEnforcementHeight())
             {
                 LogPrintf("CTxMemPool immature collateral tx removed %s  \n", tx.GetHash().ToString().c_str());
                 transactionsToRemove.push_back(tx);
                 break;
-            }*/
+            }
         }
     }
     for (const CTransaction& tx : transactionsToRemove) {
