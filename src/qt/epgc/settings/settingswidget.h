@@ -8,6 +8,7 @@
 #include <QWidget>
 #include "qt/epgc/pwidget.h"
 #include "qt/epgc/settings/settingsbackupwallet.h"
+#include "qt/epgc/settings/settingsexportcsv.h"
 #include "qt/epgc/settings/settingsbittoolwidget.h"
 #include "qt/epgc/settings/settingssignmessagewidgets.h"
 #include "qt/epgc/settings/settingswalletrepairwidget.h"
@@ -55,6 +56,7 @@ private slots:
     void onConfigurationClicked();
     void onBipToolClicked();
     void onMultisendClicked();
+    void onExportCSVClicked();
 
     // Options
     void onOptionsClicked();
@@ -81,6 +83,7 @@ private:
 
     SettingsBackupWallet *settingsBackupWallet;
     SettingsBitToolWidget *settingsBitToolWidget;
+    SettingsExportCSV *settingsExportCsvWidget;
     SettingsSignMessageWidgets *settingsSingMessageWidgets;
     SettingsWalletRepairWidget *settingsWalletRepairWidget;
     SettingsWalletOptionsWidget *settingsWalletOptionsWidget;
