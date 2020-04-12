@@ -155,6 +155,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/privacywidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/coldstakingwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsbackupwallet.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsexportcsv.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsbittoolwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsconsolewidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsdisplayoptionswidget.cpp
