@@ -42,11 +42,11 @@ public:
     void setMapper();
     void showDebugConsole();
 
-signals:
+Q_SIGNALS:
     /** Get restart command-line parameters and handle restart */
     void handleRestart(QStringList args);
 
-private slots:
+private Q_SLOTS:
     // File
     void onFileClicked();
     void onBackupWalletClicked();
@@ -78,12 +78,14 @@ private slots:
 
     void onResetAction();
     void onSaveOptionsClicked();
+
 private:
     Ui::SettingsWidget *ui;
+    int navAreaBaseHeight{0};
 
     SettingsBackupWallet *settingsBackupWallet;
-    SettingsBitToolWidget *settingsBitToolWidget;
     SettingsExportCSV *settingsExportCsvWidget;
+    SettingsBitToolWidget *settingsBitToolWidget;
     SettingsSignMessageWidgets *settingsSingMessageWidgets;
     SettingsWalletRepairWidget *settingsWalletRepairWidget;
     SettingsWalletOptionsWidget *settingsWalletOptionsWidget;
@@ -96,9 +98,12 @@ private:
     QDataWidgetMapper* mapper;
 
     QList<QPushButton*> options;
+    // Map of: menu button -> sub menu items
+    QMap <QPushButton*, QWidget*> menus;
 
     void selectOption(QPushButton* option);
-    bool openStandardDialog(QString title = "", QString body = "", QString okBtn = "OK", QString cancelBtn = "");
+    bool openStandardDialog(const QString& title = "", const QString& body = "", const QString& okBtn = "OK", const QString& cancelBtn = "");
+    void selectMenu(QPushButton* btn);
 };
 
 #endif // SETTINGSWIDGET_H
