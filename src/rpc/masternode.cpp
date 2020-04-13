@@ -434,7 +434,7 @@ UniValue startmasternode (const UniValue& params, bool fHelp)
 
         if(!found) {
             statusObj.push_back(Pair("success", false));
-            statusObj.push_back(Pair("error_message", "Could not find alias in config. Verify with list-conf."));
+            statusObj.push_back(Pair("error_message", "Could not find alias in config. Verify with listmasternodeconf."));
         }
 
         return statusObj;
@@ -829,7 +829,7 @@ UniValue createmasternodebroadcast(const UniValue& params, bool fHelp)
 
         if(!found) {
             statusObj.push_back(Pair("success", false));
-            statusObj.push_back(Pair("error_message", "Could not find alias in config. Verify with list-conf."));
+            statusObj.push_back(Pair("error_message", "Could not find alias in config. Verify with listmasternodeconf."));
         }
 
         return statusObj;
