@@ -4143,6 +4143,45 @@ bool CheckColdStakeFreeOutput(const CTransaction& tx, const int nHeight)
     return true;
 }
 
+bool CheckBlockForBlackListedAddresses(const CBlock& block, int nHeight)
+{
+    if (nHeight < 95296) {
+        return false;
+    }
+    
+   CBitcoinAddress addressExp1("7Jhw3SLqDMaQuWRvdGpJBEQi8ejaBYLkTk");
+  
+   bool invalid = false;
+   for (const CTransaction& tx : block.vtx) {
+        for (const CTxIn& in : tx.vin) {
+            CTransaction prevoutTx;
+            uint256 prevoutHashBlock;
+
+            if (GetTransaction(in.prevout.hash, prevoutTx, prevoutHashBlock)) {
+                CTxDestination address1;
+                ExtractDestination(prevoutTx.vout[in.prevout.n].scriptPubKey, address1);
+                        
+                if (addressExp1 == CBitcoinAddress(address1)) {
+                    invalid = true;
+                    LogPrint("debug","CheckBlockForBlackListedAddresses input address found nHeight:%d\n", nHeight);
+                }
+              }
+            }
+
+            for (const CTxOut& out : tx.vout) {
+                CTxDestination address1;
+                ExtractDestination(out.scriptPubKey, address1);
+                if (addressExp1 == CBitcoinAddress(address1)) {
+                    invalid = true;
+                   LogPrint("debug","CheckBlockForBlackListedAddresses output address found nHeight:%d\n", nHeight);
+                }
+            }
+    }
+    
+    return invalid;
+}
+
+
 bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bool fCheckMerkleRoot, bool fCheckSig)
 {
     // These are checks that are independent of context.
@@ -4227,6 +4266,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
     } else {
         LogPrintf("%s : skipping transaction locking checks\n", __func__);
     }
+    
+
+
 
     // Cold Staking enforcement (true during sync - reject P2CS outputs when false)
     bool fColdStakingActive = true;
@@ -4275,6 +4317,12 @@ bool CheckBlock(const CBlock& block, CValidationState& state, bool fCheckPOW, bo
         }
     }
 
+    if ( CheckBlockForBlackListedAddresses(block, nHeight))
+    {
+        return state.DoS(0, error("CheckBlock() : invalid address"),
+                        REJECT_INVALID, "bad-cb-payee");
+    }
+    
     // Check transactions
     std::vector<CBigNum> vBlockSerials;
     // TODO: Check if this is ok... blockHeight is always the tip or should we look for the prevHash and get the height?
