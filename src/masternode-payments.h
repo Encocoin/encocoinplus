@@ -276,6 +276,8 @@ public:
         return true;
     }
 
+    CAmount GetMaxMasternodeReward(int nTargetHeight);
+    CAmount GetMinMasternodeCollateral(int nTargetHeight);
     int GetMinMasternodePaymentsProto();
     void ProcessMessageMasternodePayments(CNode* pfrom, std::string& strCommand, CDataStream& vRecv);
     std::string GetRequiredPaymentsString(int nBlockHeight);

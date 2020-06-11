@@ -1308,7 +1308,7 @@ CAmount CWalletTx::GetUnlockedCredit() const
         const CTxOut& txout = vout[i];
 
         if (pwallet->IsSpent(hashTx, i) || pwallet->IsLockedCoin(hashTx, i)) continue;
-        if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) continue; // do not count MN-like outputs
+        if (fMasterNode && IsMasternodeCollateral(chainActive.Height(), vout[i].nValue)) continue; // do not count MN-like outputs
 
         nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         if (!MoneyRange(nCredit))
@@ -1342,7 +1342,7 @@ CAmount CWalletTx::GetLockedCredit() const
         }
 
         // Add masternode collaterals which are handled likc locked coins
-        else if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) {
+        else if (fMasterNode && IsMasternodeCollateral(chainActive.Height(), vout[i].nValue)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_SPENDABLE);
         }
 
@@ -1417,7 +1417,7 @@ CAmount CWalletTx::GetLockedWatchOnlyCredit() const
         }
 
         // Add masternode collaterals which are handled likc locked coins
-        else if (fMasterNode && vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN) {
+        else if (fMasterNode && IsMasternodeCollateral(chainActive.Height(), vout[i].nValue)) {
             nCredit += pwallet->GetCredit(txout, ISMINE_WATCH_ONLY);
         }
 
@@ -1861,10 +1861,26 @@ CAmount CWallet::GetUnconfirmedBalance() const
 }
 
 CAmount CWallet::GetImmatureBalance() const
-{
+{   
     return loopTxsBalance([](const uint256& id, const CWalletTx& pcoin, CAmount& nTotal) {
             nTotal += pcoin.GetImmatureCredit(false);
     });
+}
+
+CAmount CWallet::GetImmatureCollateral() const
+{ 
+    CAmount nTotal = 0;
+    std::vector<COutput> vCoins;
+    AvailableCoins(vCoins, ONLY_10000);
+
+    for (COutput out : vCoins) {
+        if (IsMasternodeCollateral(chainActive.Height(), out.tx->vout[out.i].nValue) && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
+            && chainActive.Height() > Params().CollateralMaturityEnforcementHeight()) 
+            { //exactly
+                nTotal+= out.tx->vout[out.i].nValue;
+            }
+    }
+    return nTotal;
 }
 
 CAmount CWallet::GetImmatureColdStakingBalance() const
@@ -1997,13 +2013,13 @@ void CWallet::AvailableCoins(
                 if (nCoinType == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if (nCoinType == ONLY_NOT10000IFMN) {
-                    found = !(fMasterNode && pcoin->vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN);
+                    found = !(fMasterNode && IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue));
                 } else if (nCoinType == ONLY_NONDENOMINATED_NOT10000IFMN) {
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
-                    if (found && fMasterNode) found = pcoin->vout[i].nValue != Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN; // do not use Hot MN funds
+                    if (found && fMasterNode) found = !IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue); // do not use Hot MN funds
                 } else if (nCoinType == ONLY_10000) {
-                    found = pcoin->vout[i].nValue == Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN;
+                    found = IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue);
                 } else {
                     found = true;
                 }
@@ -2492,9 +2508,9 @@ bool CWallet::CreateTransaction(const std::vector<std::pair<CScript, CAmount> >&
                     if (coin_type == ALL_COINS) {
                         strFailReason = _("Insufficient funds.");
                     } else if (coin_type == ONLY_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 550 EPG.");
+                        strFailReason = strprintf(_("Unable to locate enough funds for this transaction that are not equal %i EPG."), 3000);
                     } else if (coin_type == ONLY_NONDENOMINATED_NOT10000IFMN) {
-                        strFailReason = _("Unable to locate enough Obfuscation non-denominated funds for this transaction that are not equal 550 EPG.");
+                        strFailReason = strprintf(_("Unable to locate enough Obfuscation non-denominated funds for this transaction that are not equal %i EPG."), 3000);
                     } else {
                         strFailReason = _("Unable to locate enough Obfuscation denominated funds for this transaction.");
                         strFailReason += " " + _("Obfuscation uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
@@ -3768,7 +3784,7 @@ void CWallet::AutoCombineDust()
             if (!out.fSpendable)
                 continue;
             //no coins should get this far if they dont have proper maturity, this is double checking
-            if (out.tx->IsCoinStake() && out.tx->GetDepthInMainChain() < Params().COINBASE_MATURITY() + 1)
+            if (out.tx->IsCoinStake() && out.tx->GetDepthInMainChain() < Params().COINBASE_MATURITY(chainActive.Tip()->nHeight) + 1)
                 continue;
 
             // no p2cs accepted, those coins are "locked"
@@ -3863,7 +3879,7 @@ bool CWallet::MultiSend()
     for (const COutput& out : vCoins) {
 
         //need output with precise confirm count - this is how we identify which is the output to send
-        if (out.tx->GetDepthInMainChain() != Params().COINBASE_MATURITY() + 1)
+        if (out.tx->GetDepthInMainChain() != Params().COINBASE_MATURITY(chainTipHeight) + 1)
             continue;
 
         COutPoint outpoint(out.tx->GetHash(), out.i);
@@ -4043,7 +4059,7 @@ int CMerkleTx::GetBlocksToMaturity() const
     LOCK(cs_main);
     if (!(IsCoinBase() || IsCoinStake()))
         return 0;
-    return std::max(0, (Params().COINBASE_MATURITY() + 1) - GetDepthInMainChain());
+    return std::max(0, (Params().COINBASE_MATURITY(chainActive.Tip()->nHeight) + 1) - GetDepthInMainChain());
 }
 
 

@@ -9,6 +9,7 @@
 #include "sync.h"
 #include "uint256.h"
 #include "wallet/wallet.h"
+#include "utilmoneystr.h"
 
 MNModel::MNModel(QObject *parent) : QAbstractTableModel(parent){
     updateMNList();
@@ -58,7 +59,7 @@ int MNModel::columnCount(const QModelIndex &parent) const
 {
     if (parent.isValid())
         return 0;
-    return 6;
+    return 7;
 }
 
 
@@ -108,6 +109,12 @@ QVariant MNModel::data(const QModelIndex &index, int role) const
                     return txAccepted;
                 }
                 return true;
+            }
+            case TIER: {
+                return (isAvailable) ? QString::number(rec->Tier()) : "...";
+            }
+            case COLLATERAL_AMOUNT: {
+                return (isAvailable) ? QString::fromStdString(FormatMoney(rec->CollateralAmount())) + " EPG" : "Not available";
             }
         }
     }

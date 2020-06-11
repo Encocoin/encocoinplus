@@ -30,7 +30,9 @@ public:
         COLLATERAL_ID = 6,
         COLLATERAL_OUT_INDEX = 7,
         PRIV_KEY = 8,
-        WAS_COLLATERAL_ACCEPTED = 9
+        WAS_COLLATERAL_ACCEPTED = 9,
+        TIER = 10,
+        COLLATERAL_AMOUNT = 11
     };
 
     int rowCount(const QModelIndex &parent = QModelIndex()) const override;

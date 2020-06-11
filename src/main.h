@@ -239,7 +239,7 @@ bool GetOutput(const uint256& hash, unsigned int index, CValidationState& state,
 
 // ***TODO***
 double ConvertBitsToDouble(unsigned int nBits);
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake);
+int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake, int nTier);
 int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake);
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader* pblock, bool fProofOfStake);
 
@@ -646,6 +646,9 @@ extern CZerocoinDB* zerocoinDB;
 
 /** Global variable that points to the spork database (protected by cs_main) */
 extern CSporkDB* pSporkDB;
+
+/** Returns true if given value is valid collateral ammount (for any tier) */
+bool IsMasternodeCollateral(int nTargetHeight, CAmount nInputAmount);
 
 struct CBlockTemplate {
     CBlock block;

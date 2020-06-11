@@ -149,6 +149,15 @@ public:
     int64_t nLastDsee;  // temporary, do not save. Remove after migration to v12
     int64_t nLastDseep; // temporary, do not save. Remove after migration to v12
 
+    static int Tier(CAmount vin_val);
+    static int Tier(const CTxIn& vin);
+    int Tier();
+    static CAmount CollateralAmount(const CTxIn& vin);
+    CAmount CollateralAmount();
+
+    static bool IsDepositCoins(CAmount);
+    static bool IsDepositCoins(const CTxIn& vin, CAmount& vin_val);
+
     CMasternode();
     CMasternode(const CMasternode& other);
 

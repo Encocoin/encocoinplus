@@ -458,7 +458,7 @@ std::vector<COutput> CActiveMasternode::SelectCoinsMasternode()
     }
 
     // Retrieve all possible outputs
-    pwalletMain->AvailableCoins(vCoins);
+    pwalletMain->AvailableCoins(vCoins, ONLY_10000);
 
     // Lock MN coins from masternode.conf back if they where temporary unlocked
     if (!confLockedCoins.empty()) {
@@ -468,7 +468,7 @@ std::vector<COutput> CActiveMasternode::SelectCoinsMasternode()
 
     // Filter
     for (const COutput& out : vCoins) {
-        if (out.tx->vout[out.i].nValue == (Params().GetRequiredMasternodeCollateral(chainActive.Height()) * COIN)) { //exactly
+        if (IsMasternodeCollateral(chainActive.Height(), out.tx->vout[out.i].nValue)) { //exactly
             filteredCoins.push_back(out);
         }
     }

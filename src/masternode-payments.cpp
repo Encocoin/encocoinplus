@@ -361,6 +361,7 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
 
     bool hasPayment = true;
     CScript payee;
+    unsigned int nTier;
 
     //spork
     if (!masternodePayments.GetBlockPayee(pindexPrev->nHeight + 1, payee)) {
@@ -368,14 +369,28 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
         CMasternode* winningNode = mnodeman.GetCurrentMasterNode(1);
         if (winningNode) {
             payee = GetScriptForDestination(winningNode->pubKeyCollateralAddress.GetID());
+            nTier = winningNode->Tier();
         } else {
             LogPrint("masternode","CreateNewBlock: Failed to detect masternode to pay\n");
             hasPayment = false;
         }
+    } else {
+        // load the payee mn object to determine level
+        CMasternode* winningNode = mnodeman.Find(payee);
+        if (winningNode) {
+            nTier = winningNode->Tier();
+        } else {
+            LogPrint("masternode","CreateNewBlock: Failed to determine tier of masternode to pay\n");
+            nTier = 0;
+        }
     }
 
+    if (pindexPrev->nHeight < Params().MultiTierStartBlock())   // disable multi-tier payments until scheduled 
+        nTier = 0;
+
     CAmount blockValue = GetBlockValue(pindexPrev->nHeight);
-    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, blockValue, 0, fZEPGStake);
+    CAmount masternodePayment = GetMasternodePayment(pindexPrev->nHeight, blockValue, 0, fZEPGStake, nTier);
+    CAmount paymentDiff = (pindexPrev->nHeight < Params().MultiTierStartBlock()) ? 0 : GetMaxMasternodeReward(pindexPrev->nHeight) - masternodePayment;
     CAmount devPayment = GetDevelopersPayment(pindexPrev->nHeight, blockValue, fZEPGStake);
 
     if (hasPayment) {
@@ -394,12 +409,12 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
             if (!txNew.vout[1].IsZerocoinMint()) {
                 if (i == 2) {
                     // Majority of cases; do it quick and move on
-                    txNew.vout[i - 1].nValue -= (masternodePayment + devPayment);
+                    txNew.vout[i - 1].nValue -= (masternodePayment + devPayment + paymentDiff);
                 } else if (i > 2) {
                     // special case, stake is split between (i-1) outputs
                     unsigned int outputs = i-1;
-                    CAmount mnPaymentSplit = (masternodePayment + devPayment) / outputs;
-                    CAmount mnPaymentRemainder = (masternodePayment + devPayment) - (mnPaymentSplit * outputs);
+                    CAmount mnPaymentSplit = (masternodePayment + devPayment + paymentDiff) / outputs;
+                    CAmount mnPaymentRemainder = (masternodePayment + devPayment + paymentDiff) - (mnPaymentSplit * outputs);
                     for (unsigned int j=1; j<=outputs; j++) {
                         txNew.vout[j].nValue -= mnPaymentSplit;
                     }
@@ -414,15 +429,55 @@ void CMasternodePayments::FillBlockPayee(CMutableTransaction& txNew, int64_t nFe
             txNew.vout.resize(2);
             txNew.vout[1].scriptPubKey = payee;
             txNew.vout[1].nValue = masternodePayment;
-            txNew.vout[0].nValue = blockValue - masternodePayment;
+            txNew.vout[0].nValue = blockValue - masternodePayment - paymentDiff;
         }
 
         CTxDestination address1;
         ExtractDestination(payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrint("masternode","Masternode payment of %s to %s, devfund:%s Height:%d\n", FormatMoney(masternodePayment).c_str(), address2.ToString().c_str(), FormatMoney(devPayment).c_str(), pindexPrev->nHeight);
+        LogPrint(
+            "masternode","Masternode payment of %s to %s (%i), devfund :%s, stake reward: %s, height: %d\n", 
+            FormatMoney(masternodePayment).c_str(), 
+            address2.ToString().c_str(), 
+            nTier,
+            FormatMoney(devPayment).c_str(),
+            FormatMoney(blockValue - masternodePayment - paymentDiff - devPayment).c_str(),
+            pindexPrev->nHeight
+            );
     }
+}
+
+CAmount CMasternodePayments::GetMaxMasternodeReward(int nTargetHeight)
+{
+    CAmount ret = 0;
+    int fromTier = (nTargetHeight <= Params().NoTierLastBlock()) ? 0 : 1;
+    int toTier = (nTargetHeight < Params().MultiTierStartBlock()) ? 0 : CChainParams::MASTERNODE_TIER_COUNT;
+
+    for (int nTier = fromTier; nTier <= toTier; ++nTier) {
+        CAmount nTierReward = Params().GetMasternodeTierReward(nTargetHeight, nTier);
+
+        if (nTierReward > ret) ret = nTierReward;
+    }
+    
+    return ret;
+}
+
+CAmount CMasternodePayments::GetMinMasternodeCollateral(int nTargetHeight)
+{
+    if (nTargetHeight < Params().MultiTierStartBlock())
+        return Params().GetRequiredMasternodeCollateral(nTargetHeight, 0);
+
+    CAmount ret = Params().GetRequiredMasternodeCollateral(nTargetHeight, CChainParams::MASTERNODE_TIER_COUNT);
+
+     // ignore TIER_NONE for news masternodes, this method is used only in GUI
+    for (int nTier = 1; nTier <= CChainParams::MASTERNODE_TIER_COUNT; ++nTier) {
+        CAmount nTierCollateral = Params().GetRequiredMasternodeCollateral(nTargetHeight, nTier);
+
+        if (nTierCollateral < ret) ret = nTierCollateral;
+    }
+    
+    return ret;
 }
 
 int CMasternodePayments::GetMinMasternodePaymentsProto()
@@ -612,7 +667,7 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         nMasternode_Drift_Count = mnodeman.size() + Params().MasternodeCountDrift();
     }
 
-    CAmount requiredMasternodePayment = GetMasternodePayment(nBlockHeight, nReward, nMasternode_Drift_Count, txNew.HasZerocoinSpendInputs());
+    CAmount requiredMasternodePayment;
 
     //require at least 6 signatures
     for (CMasternodePayee& payee : vecPayments)
@@ -626,11 +681,15 @@ bool CMasternodeBlockPayees::IsTransactionValid(const CTransaction& txNew)
         bool found = false;
         for (CTxOut out : txNew.vout) {
             if (payee.scriptPubKey == out.scriptPubKey) {
-                if(out.nValue == requiredMasternodePayment)
-                    found = true;
-                else
-                    LogPrintf("%s : Masternode payment value (%s) different from required value (%s).\n",
-                            __func__, FormatMoney(out.nValue).c_str(), FormatMoney(requiredMasternodePayment).c_str());
+                for (int nTier = 0; nTier <= CChainParams::MASTERNODE_TIER_COUNT; ++nTier) {
+                    requiredMasternodePayment = GetMasternodePayment(nBlockHeight, nReward, nMasternode_Drift_Count, txNew.HasZerocoinSpendInputs(), nTier);
+
+                    if(out.nValue == requiredMasternodePayment)
+                        found = true;
+                }
+                if (!found)
+                    LogPrintf("%s : Masternode payment value (%s) different from required collateral values.\n",
+                            __func__, FormatMoney(out.nValue).c_str());
             }
         }
 

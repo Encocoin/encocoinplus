@@ -18,9 +18,9 @@ MnInfoDialog::MnInfoDialog(QWidget *parent) :
     this->setStyleSheet(parent->styleSheet());
     setCssProperty(ui->frame, "container-dialog");
     setCssProperty(ui->labelTitle, "text-title-dialog");
-    setCssTextBodyDialog({ui->labelAmount, ui->labelSend, ui->labelInputs, ui->labelFee, ui->labelId});
+    setCssTextBodyDialog({ui->labelAmount, ui->labelSend, ui->labelInputs, ui->labelFee, ui->labelId, ui->labelTier, ui->labelCollateral});
     setCssProperty({ui->labelDivider1, ui->labelDivider4, ui->labelDivider6, ui->labelDivider7, ui->labelDivider8, ui->labelDivider9}, "container-divider");
-    setCssTextBodyDialog({ui->textAmount, ui->textAddress, ui->textInputs, ui->textStatus, ui->textId, ui->textExport});
+    setCssTextBodyDialog({ui->textAmount, ui->textAddress, ui->textInputs, ui->textStatus, ui->textId, ui->textExport, ui->textTier, ui->textCollateral});
     setCssProperty({ui->pushCopy, ui->pushCopyId, ui->pushExport}, "ic-copy-big");
     setCssProperty(ui->btnEsc, "ic-close");
     connect(ui->btnEsc, SIGNAL(clicked()), this, SLOT(closeDialog()));
@@ -29,7 +29,7 @@ MnInfoDialog::MnInfoDialog(QWidget *parent) :
     connect(ui->pushExport, &QPushButton::clicked, [this](){ exportMN = true; accept(); });
 }
 
-void MnInfoDialog::setData(QString pubKey, QString name, QString address, QString txId, QString outputIndex, QString status){
+void MnInfoDialog::setData(QString pubKey, QString name, QString address, QString txId, QString outputIndex, QString status,  QString tier, QString collateral){
     this->pubKey = pubKey;
     this->txId = txId;
     QString shortPubKey = pubKey;
@@ -45,6 +45,8 @@ void MnInfoDialog::setData(QString pubKey, QString name, QString address, QStrin
     ui->textAmount->setText(shortTxId);
     ui->textInputs->setText(outputIndex);
     ui->textStatus->setText(status);
+    ui->textTier->setText(tier);
+    ui->textCollateral->setText(collateral);
 }
 
 void MnInfoDialog::copyInform(QString& copyStr, QString message){

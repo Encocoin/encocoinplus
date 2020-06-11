@@ -24,7 +24,7 @@ public:
 
     bool exportMN = false;
 
-    void setData(QString privKey, QString name, QString address, QString txId, QString outputIndex, QString status);
+    void setData(QString privKey, QString name, QString address, QString txId, QString outputIndex, QString status, QString tier, QString collateral);
 
 public slots:
     void closeDialog();
