@@ -68,6 +68,9 @@ UniValue listmasternodes(const UniValue& params, bool fHelp)
             "    \"pubkey\": \"key\",   (string) Masternode public key used for message broadcasting\n"
             "    \"status\": s,         (string) Status (ENABLED/EXPIRED/REMOVE/etc)\n"
             "    \"addr\": \"addr\",      (string) Masternode EPGC address\n"
+            "    \"tier\": n,           (numeric) Masternode tier number\n"
+            "    \"collateral\": n,     (numeric) Masternode collateral value in EPG\n"
+            "    \"tierreward\": n,     (numeric) Masternode reward at current block height for this masternode tier\n"
             "    \"version\": v,        (numeric) Masternode protocol version\n"
             "    \"lastseen\": ttt,     (numeric) The time in seconds since epoch (Jan 1 1970 GMT) of the last seen\n"
             "    \"activetime\": ttt,   (numeric) The time in seconds since epoch (Jan 1 1970 GMT) masternode has been active\n"
@@ -115,6 +118,9 @@ UniValue listmasternodes(const UniValue& params, bool fHelp)
             obj.push_back(Pair("pubkey", HexStr(mn->pubKeyMasternode)));
             obj.push_back(Pair("status", strStatus));
             obj.push_back(Pair("addr", CBitcoinAddress(mn->pubKeyCollateralAddress.GetID()).ToString()));
+            obj.push_back(Pair("tier", (int64_t)mn->Tier()));
+            obj.push_back(Pair("collateral", ValueFromAmount(mn->CollateralAmount())));
+            obj.push_back(Pair("tierreward", ValueFromAmount(Params().GetMasternodeTierReward(chainActive.Height(), mn->Tier()))));
             obj.push_back(Pair("version", mn->protocolVersion));
             obj.push_back(Pair("lastseen", (int64_t)mn->lastPing.sigTime));
             obj.push_back(Pair("activetime", (int64_t)(mn->lastPing.sigTime - mn->sigTime)));

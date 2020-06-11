@@ -659,7 +659,7 @@
          </size>
         </property>
         <widget class="QWidget" name="page_1">
-         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,3,0,0,0">
+         <layout class="QVBoxLayout" name="verticalLayout_3" stretch="0,0,3,0,0,0,0,0">
           <property name="spacing">
            <number>6</number>
           </property>
@@ -713,13 +713,27 @@
           <item>
            <widget class="QLabel" name="labelMessage1a">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To create a EPG Masternode you must dedicate 550 EPG (the unit of EPG) to the network (however, these coins are still yours and will never leave your possession). &lt;/p&gt;&lt;p&gt;&lt;/p&gt;&lt;p&gt;You can deactivate the node and unlock the coins at any time.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;To create a EPG Masternode you must choose tier and dedicate 3500.123 EPG / 6500.123 EPG  to the network (however, these coins are still yours and will never leave your possession). &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignHCenter|Qt::AlignTop</set>
             </property>
             <property name="wordWrap">
              <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButtonTier1">
+            <property name="text">
+             <string>Tier 1 - 3500.123 EPG</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButtonTier2">
+            <property name="text">
+             <string>Tier 2 - 6500.123 EPG</string>
             </property>
            </widget>
           </item>
@@ -841,7 +855,7 @@
           <item>
            <widget class="QLabel" name="labelMessage3">
             <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A transaction of 550 EPG will be made&lt;/p&gt;&lt;p&gt;to a new empty address in your wallet.&lt;/p&gt;&lt;p&gt;The Address is labeled under the master node's name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;A transaction of 3500.123 EPG will be made&lt;/p&gt;&lt;p&gt;to a new empty address in your wallet.&lt;/p&gt;&lt;p&gt;The Address is labeled under the master node's name.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
             </property>
             <property name="alignment">
              <set>Qt::AlignHCenter|Qt::AlignTop</set>

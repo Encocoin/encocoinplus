@@ -612,11 +612,11 @@ bool ProcessBlockFound(CBlock* pblock, CWallet& wallet, CReserveKey& reservekey)
     LogPrintf("generated %s\n", FormatMoney(pblock->vtx[0].vout[0].nValue));
 
     // Found a solution
-    {
-        WaitableLock lock(g_best_block_mutex);
-        if (pblock->hashPrevBlock != g_best_block)
-            return error("EPGCMiner : generated block is stale");
-    }
+    //{
+    //    WaitableLock lock(g_best_block_mutex);
+    //    if (pblock->hashPrevBlock != g_best_block)
+    //        return error("EPGCMiner : generated block is stale");
+    //}
 
     // Remove key from key pool
     reservekey.KeepKey();

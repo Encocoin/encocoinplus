@@ -78,7 +78,9 @@ public:
     int64_t TargetTimespan(const bool fV2 = true) const { return fV2 ? nTargetTimespan_V2 : nTargetTimespan; }
 
     /** returns the coinbase maturity **/
-    int COINBASE_MATURITY() const { return nMaturity; }
+    int COINBASE_MATURITY(const int nHeight) const { return nMaturity; }
+    int COLLATERAL_MATURITY() const { return nCollateralMaturity; }
+    int CollateralMaturityEnforcementHeight() const { return nCollateralMaturityEnforcementHeight; }
 
     /** returns the coinstake maturity (min depth required) **/
     int COINSTAKE_MIN_AGE() const { return nStakeMinAge; }
@@ -164,8 +166,15 @@ public:
     int Zerocoin_Block_Public_Spend_Enabled() const { return nPublicZCSpends; }
     int Zerocoin_Block_Last_Checkpoint() const { return nBlockLastAccumulatorCheckpoint; }
 
-    /** Masternode colleteral value */
-    virtual int GetRequiredMasternodeCollateral(int nTargetHeight)  const = 0;
+    /** Masternode related consensus chain params  */
+    virtual CAmount GetRequiredMasternodeCollateral(int nTargetHeight, int nTier)  const = 0;
+    virtual CAmount GetMasternodeTierReward(int nTargetHeight, int nTier)  const = 0;
+    virtual CAmount GetTierObfuscationValue(int nTier)  const = 0;
+    int MultiTierStartBlock() const { return nMultiTierStartBlock; }
+    int NoTierLastBlock() const { return nMultiTierStartBlock + 1000; }
+    enum MasternodeTiers { TIER_NONE = 0, TIER_ONE = 1, TIER_TWO = 2};
+    static const int MASTERNODE_TIER_COUNT = 2;
+    
     /** Address of developers fund */
     std::string GetDevFundAddress() const { return  strDevFundAddress; }
    
@@ -192,7 +201,10 @@ protected:
     int64_t nEpgcBadBlockTime;
     unsigned int nEpgcBadBlocknBits;
     int nMasternodeCountDrift;
+    int nMultiTierStartBlock;
     int nMaturity;
+    int nCollateralMaturity;
+    int nCollateralMaturityEnforcementHeight;
     int nStakeMinDepth;
     int nStakeMinAge;
     int nFutureTimeDriftPoW;
@@ -263,6 +275,11 @@ protected:
     // fake serial attack
     int nFakeSerialBlockheightEnd = 0;
     CAmount nSupplyBeforeFakeSerial = 0;
+
+    /** Masternode related consensus chain params  */
+    double nMasternodeTierCollaterals[MASTERNODE_TIER_COUNT + 1];
+    double nMasternodeTierRewards[MASTERNODE_TIER_COUNT + 1];
+    double nTierObfuscationValues[MASTERNODE_TIER_COUNT + 1];
 };
 
 /**

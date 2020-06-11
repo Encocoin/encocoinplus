@@ -478,7 +478,15 @@ void CTxMemPool::removeCoinbaseSpends(const CCoinsViewCache* pcoins, unsigned in
                 continue;
             const CCoins* coins = pcoins->AccessCoins(txin.prevout.hash);
             if (fSanityCheck) assert(coins);
-            if (!coins || ((coins->IsCoinBase() || coins->IsCoinStake()) && nMemPoolHeight - coins->nHeight < (unsigned)Params().COINBASE_MATURITY())) {
+            if (!coins || ((coins->IsCoinBase() || coins->IsCoinStake()) && nMemPoolHeight - coins->nHeight < (unsigned)Params().COINBASE_MATURITY(coins->nHeight))) {
+                transactionsToRemove.push_back(tx);
+                break;
+            }
+            if (IsMasternodeCollateral(chainActive.Height(), coins->vout[txin.prevout.n].nValue)
+                && nMemPoolHeight - coins->nHeight < Params().COLLATERAL_MATURITY()
+                && nMemPoolHeight > Params().CollateralMaturityEnforcementHeight())
+            {
+                LogPrintf("CTxMemPool immature collateral tx removed %s  \n", tx.GetHash().ToString().c_str());
                 transactionsToRemove.push_back(tx);
                 break;
             }

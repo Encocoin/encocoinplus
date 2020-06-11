@@ -57,7 +57,7 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
         bnNew.SetCompact(pindexLast->nBits);
 
         // on first block with V2 time protocol, reduce the difficulty by a factor 16
-        if (fTimeV2 && !Params().IsTimeProtocolV2(pindexLast->nHeight))
+        if ((pindexLast->nHeight >= Params().MultiTierStartBlock() - 1) || (fTimeV2 && !Params().IsTimeProtocolV2(pindexLast->nHeight)))
             bnNew <<= 4;
 
         int64_t nInterval = nTargetTimespan / nTargetSpacing;
