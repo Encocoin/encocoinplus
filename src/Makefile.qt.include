@@ -566,6 +566,8 @@ RES_ICONS = \
   qt/epgc/res/img/dark/ic-transaction-cs-contract-inactive.svg \
   qt/epgc/res/img/img-qr.svg \
   qt/epgc/res/img/ic-check-connect-off.svg \
+  qt/epgc/res/img/ic-check-tor-off.svg \
+  qt/epgc/res/img/ic-check-tor.svg \
   qt/epgc/res/img/ic-label.svg \
   qt/epgc/res/img/ic-transaction-received.svg \
   qt/epgc/res/img/dark/ic-transaction-received.svg \
