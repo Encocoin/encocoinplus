@@ -166,6 +166,7 @@ SET(QT_SOURCES
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingssignmessagewidgets.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingswalletoptionswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingswalletrepairwidget.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingsexportcsv.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/settings/settingswidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/welcomecontentwidget.cpp
         ${CMAKE_CURRENT_SOURCE_DIR}/epgc/splash.cpp

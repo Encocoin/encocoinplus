@@ -9,6 +9,7 @@
 #include "qt/epgc/pwidget.h"
 #include "qt/epgc/settings/settingsbackupwallet.h"
 #include "qt/epgc/settings/settingsbittoolwidget.h"
+#include "qt/epgc/settings/settingsexportcsv.h"
 #include "qt/epgc/settings/settingssignmessagewidgets.h"
 #include "qt/epgc/settings/settingswalletrepairwidget.h"
 #include "qt/epgc/settings/settingswalletoptionswidget.h"
@@ -55,6 +56,7 @@ private slots:
     void onConfigurationClicked();
     void onBipToolClicked();
     void onMultisendClicked();
+    void onExportCSVClicked();
 
     // Options
     void onOptionsClicked();
@@ -76,10 +78,13 @@ private slots:
 
     void onResetAction();
     void onSaveOptionsClicked();
+    
 private:
     Ui::SettingsWidget *ui;
+    int navAreaBaseHeight{0};
 
     SettingsBackupWallet *settingsBackupWallet;
+    SettingsExportCSV *settingsExportCsvWidget;
     SettingsBitToolWidget *settingsBitToolWidget;
     SettingsSignMessageWidgets *settingsSingMessageWidgets;
     SettingsWalletRepairWidget *settingsWalletRepairWidget;
@@ -93,9 +98,12 @@ private:
     QDataWidgetMapper* mapper;
 
     QList<QPushButton*> options;
+    // Map of: menu button -> sub menu items
+    QMap <QPushButton*, QWidget*> menus;
 
     void selectOption(QPushButton* option);
-    bool openStandardDialog(QString title = "", QString body = "", QString okBtn = "OK", QString cancelBtn = "");
+    bool openStandardDialog(const QString& title = "", const QString& body = "", const QString& okBtn = "OK", const QString& cancelBtn = "");
+    void selectMenu(QPushButton* btn);
 };
 
 #endif // SETTINGSWIDGET_H
