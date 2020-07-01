@@ -587,6 +587,35 @@ QPushButton[cssClass="btn-check-connect"]:checked {
     border-bottom:2px solid #faf487;
 }
 
+/* Tor status*/
+
+QPushButton[cssClass="btn-check-tor"] {
+    qproperty-icon: url("://ic-check-tor") ;
+    qproperty-iconSize: 24px 24px;
+    color:#ffffff;
+    background-color:#5080804d;
+    border-bottom:2px solid #faf487;
+    border-radius:2px;
+}
+
+
+QPushButton[cssClass="btn-check-tor-inactive"] {
+    qproperty-icon: url("://ic-check-tor-off");
+    qproperty-iconSize: 24px 24px;
+    color:#B3FFFFFF;
+    background-color:#407d7d4a;
+    border-bottom:2px solid #777848;
+    border-radius:2px;
+}
+
+QPushButton[cssClass="btn-check-tor"]:checked {
+    background-color:#5080804d;
+    color:#ffffff;
+    border-bottom:2px solid #faf487;
+}
+
+/* End tor status*/
+
 QPushButton[cssClass="btn-check-status-lock"] {
     background-color:#5080804d;
     border-bottom:2px solid #faf487;
@@ -2233,14 +2262,14 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
 QScrollBar:vertical {
     border: 0px solid #bababa;
     background:white;
-    width:4px;
+    width:7px;
     margin: 0px 0px 0px 0px;
 }
 
 
 QScrollBar::handle:vertical {
     background: #bababa;
-    min-height: 0px;
+    min-height: 10px;
 }
 
 QScrollBar::add-line:vertical {
@@ -2740,9 +2769,9 @@ QPushButton[cssClass="ic-step-confirm-welcome"] {
     background-image: url("://ic-check-white");
     background-position:center;
     background-repeat:no-repeat;
-    border:  1px solid #6C529D;
+    border:  1px solid #80804d;
     border-radius:11px;
-    background-color:#6C529D;
+    background-color:#80804d;
 }
 
 *[cssClass="text-title-welcome"] {

@@ -91,6 +91,7 @@ QT_FORMS_UI = \
   qt/epgc/forms/privacywidget.ui \
   qt/epgc/forms/coldstakingwidget.ui \
   qt/epgc/settings/forms/settingsbackupwallet.ui \
+  qt/epgc/settings/forms/settingsexportcsv.ui \
   qt/epgc/settings/forms/settingsbittoolwidget.ui \
   qt/epgc/settings/forms/settingsconsolewidget.ui \
   qt/epgc/settings/forms/settingsdisplayoptionswidget.ui \
@@ -188,6 +189,7 @@ QT_MOC_CPP = \
   qt/epgc/moc_privacywidget.cpp \
   qt/epgc/moc_coldstakingwidget.cpp \
   qt/epgc/settings/moc_settingsbackupwallet.cpp \
+  qt/epgc/settings/moc_settingsexportcsv.cpp \
   qt/epgc/settings/moc_settingsbittoolwidget.cpp \
   qt/epgc/settings/moc_settingsconsolewidget.cpp \
   qt/epgc/settings/moc_settingsdisplayoptionswidget.cpp \
@@ -319,6 +321,7 @@ BITCOIN_QT_H = \
   qt/epgc/privacywidget.h \
   qt/epgc/coldstakingwidget.h \
   qt/epgc/settings/settingsbackupwallet.h \
+  qt/epgc/settings/settingsexportcsv.h \
   qt/epgc/settings/settingsbittoolwidget.h \
   qt/epgc/settings/settingsconsolewidget.h \
   qt/epgc/settings/settingsdisplayoptionswidget.h \
@@ -563,6 +566,8 @@ RES_ICONS = \
   qt/epgc/res/img/dark/ic-transaction-cs-contract-inactive.svg \
   qt/epgc/res/img/img-qr.svg \
   qt/epgc/res/img/ic-check-connect-off.svg \
+  qt/epgc/res/img/ic-check-tor-off.svg \
+  qt/epgc/res/img/ic-check-tor.svg \
   qt/epgc/res/img/ic-label.svg \
   qt/epgc/res/img/ic-transaction-received.svg \
   qt/epgc/res/img/dark/ic-transaction-received.svg \
@@ -707,6 +712,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/epgc/privacywidget.cpp \
   qt/epgc/coldstakingwidget.cpp \
   qt/epgc/settings/settingsbackupwallet.cpp \
+  qt/epgc/settings/settingsexportcsv.cpp \
   qt/epgc/settings/settingsbittoolwidget.cpp \
   qt/epgc/settings/settingsconsolewidget.cpp \
   qt/epgc/settings/settingsdisplayoptionswidget.cpp \

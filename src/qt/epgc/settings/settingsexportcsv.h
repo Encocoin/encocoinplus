@@ -6,7 +6,7 @@
 #define SETTINGSEXPORTCSV_H
 
 #include <QWidget>
-#include "qt/pivx/pwidget.h"
+#include "qt/epgc/pwidget.h"
 #include "transactionfilterproxy.h"
 #include <QSortFilterProxyModel>
 
@@ -19,20 +19,18 @@ class SettingsExportCSV : public PWidget
     Q_OBJECT
 
 public:
-    explicit SettingsExportCSV(PIVXGUI* _window, QWidget *parent = nullptr);
+    explicit SettingsExportCSV(EPGCGUI* _window, QWidget *parent = nullptr);
     ~SettingsExportCSV();
 
 private Q_SLOTS:
     void selectFileOutput(const bool& isTxExport);
-    void exportClicked();
-    void onExportAddressesClicked();
+    void exportTxes(const QString& filename);
+    void exportAddrs(const QString& filename);
 
 private:
     Ui::SettingsExportCSV *ui;
     TransactionFilterProxy* txFilter{nullptr};
     QSortFilterProxyModel* addressFilter{nullptr};
-    QString filename;
-    QString filenameAddressBook;
 };
 
 #endif // SETTINGSEXPORTCSV_H
