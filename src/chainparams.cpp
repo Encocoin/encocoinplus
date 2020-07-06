@@ -185,6 +185,9 @@ public:
         strDevFundAddress = "7Ns4orZTzEqrVPSPE4JhcGHhoEsqSnrYg7";
         nStakeInputMinimal = 75 * COIN;
 
+        nCollateralMaturity = 262980;
+        nCollateralMaturityEnforcementHeight = 118101;
+
         /** Height or Time Based Activations **/
         nLastPOWBlock = 1000;
         nEpgcBadBlockTime = 1471401614; // Skip nBit validation of Block 259201 per PR #915
@@ -300,19 +303,48 @@ public:
 
         nBudget_Fee_Confirmations = 6; // Number of confirmations for the finalization fee
         nProposalEstablishmentTime = 60 * 60 * 24; // Proposals must be at least a day old to make it into a budget
+
+        /** Masternode-ter related consensus chain params  */
+        nMultiTierStartBlock = 118000;
+
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_NONE]  = 2000;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_ONE]   = 3500.123;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_TWO]   = 6500.123;
+
+        nTierObfuscationValues[MasternodeTiers::TIER_NONE]  = 1999.99;
+        nTierObfuscationValues[MasternodeTiers::TIER_ONE]   = 3500.113;
+        nTierObfuscationValues[MasternodeTiers::TIER_TWO]   = 6500.113;
+
+        nMasternodeTierRewards[MasternodeTiers::TIER_NONE]  = 1.00;
+        nMasternodeTierRewards[MasternodeTiers::TIER_ONE]   = 0.60;
+        nMasternodeTierRewards[MasternodeTiers::TIER_TWO]   = 1.20;
     }
 
-    int GetRequiredMasternodeCollateral(int nTargetHeight) const
+    CAmount GetRequiredMasternodeCollateral(int nTargetHeight, int nTier) const
     {
-        if(nTargetHeight < 10001  ) {
-            return 550;
-        } else if (nTargetHeight < 45501){
-            return 550;
-        }
-        else
-        {
-           return 2000;
-        }
+        if (nTargetHeight < 45501)
+            return 550 * COIN;
+
+        if (nTargetHeight >= MultiTierStartBlock() && nTier > 0 && nTier <= MASTERNODE_TIER_COUNT)
+            return nMasternodeTierCollaterals[nTier] * COIN;
+
+        return nMasternodeTierCollaterals[MasternodeTiers::TIER_NONE] * COIN;
+    }
+
+    CAmount GetMasternodeTierReward(int nTargetHeight, int nTier) const
+    {
+        if (nTargetHeight >= MultiTierStartBlock() && nTier > 0 && nTier <= MASTERNODE_TIER_COUNT)
+            return nMasternodeTierRewards[nTier] * COIN;
+
+        return nMasternodeTierRewards[MasternodeTiers::TIER_NONE] * COIN;
+    }
+    
+    CAmount GetTierObfuscationValue(int nTier) const
+    {
+        if (nTier > 0 && nTier <= MASTERNODE_TIER_COUNT)
+            return nTierObfuscationValues[nTier] * COIN;
+
+        return nTierObfuscationValues[MasternodeTiers::TIER_NONE] * COIN;
     }
     
     CAmount StakingMinInput(int nTargetHeight) const
@@ -436,15 +468,21 @@ public:
                                        // here because we only have a 8 block finalization window on testnet
 
         nProposalEstablishmentTime = 60 * 5; // Proposals must be at least 5 mns old to make it into a test budget
-    }
 
-    int GetRequiredMasternodeCollateral(int nTargetHeight) const
-    {
-        if(nTargetHeight > 10000) {
-            return 450;
-        }
+        /** Masternode related consensus chain params  */
+        nMultiTierStartBlock = 111434;
 
-        return 250;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_NONE] = 0;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_ONE] = 3000.0001;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_TWO] = 7000.0001;
+
+        nMasternodeTierRewards[MasternodeTiers::TIER_NONE] = 0;
+        nMasternodeTierRewards[MasternodeTiers::TIER_ONE] = 1;
+        nMasternodeTierRewards[MasternodeTiers::TIER_TWO] = 2.5;
+
+        nTierObfuscationValues[MasternodeTiers::TIER_NONE] = 0;
+        nTierObfuscationValues[MasternodeTiers::TIER_ONE] = 2999.99;
+        nTierObfuscationValues[MasternodeTiers::TIER_TWO] = 6999.99;
     }
     
     CAmount StakingMinInput(int nTargetHeight) const
@@ -489,6 +527,7 @@ public:
         nStakeMinAge = 0;
         nStakeMinDepth = 0;
         nMasternodeCountDrift = 4;
+        nMultiTierStartBlock = 1000;
         nModifierUpdateBlock = 0;       //approx Mon, 17 Apr 2017 04:00:00 GMT
         nMaxMoneyOut = 43199500 * COIN;
         nZerocoinStartHeight = 300;
@@ -532,6 +571,19 @@ public:
         fMineBlocksOnDemand = true;
         fSkipProofOfWorkCheck = true;
         fTestnetToBeDeprecatedFieldRPC = false;
+
+        /** Masternode related consensus chain params  */
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_NONE] = 0;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_ONE] = 2000.0001;
+        nMasternodeTierCollaterals[MasternodeTiers::TIER_TWO] = 0.5001;
+
+        nMasternodeTierRewards[MasternodeTiers::TIER_NONE] = 0;
+        nMasternodeTierRewards[MasternodeTiers::TIER_ONE] = 1;
+        nMasternodeTierRewards[MasternodeTiers::TIER_TWO] = 2.5;
+
+        nTierObfuscationValues[MasternodeTiers::TIER_NONE] = 0;
+        nTierObfuscationValues[MasternodeTiers::TIER_ONE] = 1999.99;
+        nTierObfuscationValues[MasternodeTiers::TIER_TWO] = 0.49;
 
         /* Spork Key for RegTest:
         WIF private key: 932HEevBSujW2ud7RfB1YF91AFygbBRQj3de3LyaCRqNzKKgWXi

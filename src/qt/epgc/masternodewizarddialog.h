@@ -31,10 +31,12 @@ public:
     QString returnStr = "";
     bool isOk = false;
     CMasternodeConfig::CMasternodeEntry* mnEntry = nullptr;
+    int nTier = 1;
 
 private slots:
     void onNextClicked();
     void onBackClicked();
+    void radioButtonTier2(bool);
 private:
     Ui::MasterNodeWizardDialog *ui;
     QPushButton* icConfirm1;

@@ -48,9 +48,11 @@ public:
         MNRow* row = static_cast<MNRow*>(holder);
         QString label = index.data(Qt::DisplayRole).toString();
         QString address = index.sibling(index.row(), MNModel::ADDRESS).data(Qt::DisplayRole).toString();
+        QString tier = index.sibling(index.row(), MNModel::TIER).data(Qt::DisplayRole).toString();
+        QString collateral = index.sibling(index.row(), MNModel::COLLATERAL_AMOUNT).data(Qt::DisplayRole).toString();
         QString status = index.sibling(index.row(), MNModel::STATUS).data(Qt::DisplayRole).toString();
         bool wasCollateralAccepted = index.sibling(index.row(), MNModel::WAS_COLLATERAL_ACCEPTED).data(Qt::DisplayRole).toBool();
-        row->updateView("Address: " + address, label, status, wasCollateralAccepted);
+        row->updateView("Address: " + address + "; Tier: " + tier + ((collateral == "Not available") ? "" : " - " + collateral), label, status, wasCollateralAccepted);
     }
 
     QColor rectColor(bool isHovered, bool isSelected) override{
@@ -308,10 +310,12 @@ void MasterNodesWidget::onInfoMNClicked() {
     QString label = index.data(Qt::DisplayRole).toString();
     QString address = index.sibling(index.row(), MNModel::ADDRESS).data(Qt::DisplayRole).toString();
     QString status = index.sibling(index.row(), MNModel::STATUS).data(Qt::DisplayRole).toString();
+    QString tier = index.sibling(index.row(), MNModel::TIER).data(Qt::DisplayRole).toString();
+    QString collateral = index.sibling(index.row(), MNModel::COLLATERAL_AMOUNT).data(Qt::DisplayRole).toString();
     QString txId = index.sibling(index.row(), MNModel::COLLATERAL_ID).data(Qt::DisplayRole).toString();
     QString outIndex = index.sibling(index.row(), MNModel::COLLATERAL_OUT_INDEX).data(Qt::DisplayRole).toString();
     QString pubKey = index.sibling(index.row(), MNModel::PUB_KEY).data(Qt::DisplayRole).toString();
-    dialog->setData(pubKey, label, address, txId, outIndex, status);
+    dialog->setData(pubKey, label, address, txId, outIndex, status, tier, collateral);
     dialog->adjustSize();
     showDialog(dialog, 3, 17);
     if (dialog->exportMN){
@@ -427,8 +431,8 @@ void MasterNodesWidget::onDeleteMNClicked(){
 
 void MasterNodesWidget::onCreateMNClicked(){
     if(verifyWalletUnlocked()) {
-        if(walletModel->getBalance() <= (COIN * walletModel->getRequiredMasternodeCollateral())){
-            inform(tr("Not enough balance to create a masternode, 2000 EPG required."));
+        if(walletModel->getBalance() <= walletModel->getMinMasternodeCollateral()) {
+            inform(tr("Not enough balance to create a masternode."));
             return;
         }
         showHideOp(true);

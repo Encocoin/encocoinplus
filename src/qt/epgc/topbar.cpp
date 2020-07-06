@@ -39,7 +39,7 @@ TopBar::TopBar(EPGCGUI* _mainWindow, QWidget *parent) :
     ui->containerTop->setProperty("cssClass", "container-top");
 #endif
 
-    std::initializer_list<QWidget*> lblTitles = {ui->labelTitle1, ui->labelTitle2, ui->labelTitle3, ui->labelTitle4, ui->labelTitle5, ui->labelTitle6};
+    std::initializer_list<QWidget*> lblTitles = {ui->labelTitle1, ui->labelTitle3, ui->labelTitle4, ui->labelTitle5 };
     setCssProperty(lblTitles, "text-title-topbar");
     QFont font;
     font.setWeight(QFont::Light);
@@ -47,16 +47,10 @@ TopBar::TopBar(EPGCGUI* _mainWindow, QWidget *parent) :
 
     // Amount information top
     ui->widgetTopAmount->setVisible(false);
-    setCssProperty({ui->labelAmountTopEpg, ui->labelAmountTopzEpg}, "amount-small-topbar");
-    setCssProperty({ui->labelAmountEpg, ui->labelAmountzEpg}, "amount-topbar");
-    setCssProperty({ui->labelPendingEpg, ui->labelPendingzEpg, ui->labelImmatureEpg, ui->labelImmaturezEpg}, "amount-small-topbar");
-
-    ui->labelTitle2->setVisible(false);
-    ui->labelTitle5->setVisible(false);
-    ui->labelTitle6->setVisible(false);
-    ui->labelAmountTopzEpg->setVisible(false);
-    ui->labelAmountzEpg->setVisible(false);
-    ui->labelPendingzEpg->setVisible(false);
+    setCssProperty({ui->labelAmountTopEpg}, "amount-small-topbar");
+    setCssProperty({ui->labelAmountEpg}, "amount-topbar");
+    setCssProperty({ui->labelPendingEpg, ui->labelImmatureEpg}, "amount-small-topbar");
+    setCssProperty({ui->labelAmountCollateral}, "amount-topbar");
 
     // Progress Sync
     progressBar = new QProgressBar(ui->layoutSync);
@@ -87,9 +81,9 @@ TopBar::TopBar(EPGCGUI* _mainWindow, QWidget *parent) :
     ui->pushButtonColdStaking->setButtonClassStyle("cssClass", "btn-check-cold-staking-inactive");
     ui->pushButtonColdStaking->setButtonText("Cold Staking Disabled");
 
-    ui->pushButtonMint->setButtonClassStyle("cssClass", "btn-check-mint-inactive");
-    ui->pushButtonMint->setButtonText("Automint Enabled");
-    ui->pushButtonMint->setVisible(false);
+    //ui->pushButtonMint->setButtonClassStyle("cssClass", "btn-check-mint-inactive");
+    //ui->pushButtonMint->setButtonText("Automint Enabled");
+    //ui->pushButtonMint->setVisible(false);
 
     ui->pushButtonSync->setButtonClassStyle("cssClass", "btn-check-sync");
     ui->pushButtonSync->setButtonText(" %54 Synchronizing..");
@@ -363,8 +357,8 @@ void TopBar::loadClientModel(){
 }
 
 void TopBar::updateAutoMintStatus(){
-    ui->pushButtonMint->setButtonText(fEnableZeromint ? tr("Automint enabled") : tr("Automint disabled"));
-    ui->pushButtonMint->setChecked(fEnableZeromint);
+    //ui->pushButtonMint->setButtonText(fEnableZeromint ? tr("Automint enabled") : tr("Automint disabled"));
+    //ui->pushButtonMint->setChecked(fEnableZeromint);
 }
 
 void TopBar::setStakingStatusActive(bool fActive)
@@ -494,8 +488,8 @@ void TopBar::setNumBlocks(int count) {
 }
 
 void TopBar::loadWalletModel(){
-    connect(walletModel, SIGNAL(balanceChanged(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)), this,
-            SLOT(updateBalances(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
+    connect(walletModel, SIGNAL(balanceChanged(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)), this,
+            SLOT(updateBalances(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount)));
     connect(walletModel->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
     connect(walletModel, &WalletModel::encryptionStatusChanged, this, &TopBar::refreshStatus);
     // update the display unit, to not use the default ("EPGC")
@@ -561,14 +555,14 @@ void TopBar::updateDisplayUnit()
         int displayUnitPrev = nDisplayUnit;
         nDisplayUnit = walletModel->getOptionsModel()->getDisplayUnit();
         if (displayUnitPrev != nDisplayUnit)
-            updateBalances(walletModel->getBalance(), walletModel->getUnconfirmedBalance(), walletModel->getImmatureBalance(),
+            updateBalances(walletModel->getBalance(), walletModel->getUnconfirmedBalance(), walletModel->getImmatureBalance(), walletModel->getLockedCollateralBalance(),
                            walletModel->getZerocoinBalance(), walletModel->getUnconfirmedZerocoinBalance(), walletModel->getImmatureZerocoinBalance(),
                            walletModel->getWatchBalance(), walletModel->getWatchUnconfirmedBalance(), walletModel->getWatchImmatureBalance(),
                            walletModel->getDelegatedBalance(), walletModel->getColdStakedBalance());
     }
 }
 
-void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& LockedCollateralBalance,
                             const CAmount& zerocoinBalance, const CAmount& unconfirmedZerocoinBalance, const CAmount& immatureZerocoinBalance,
                             const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
                             const CAmount& delegatedBalance, const CAmount& coldStakedBalance){
@@ -586,6 +580,7 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     CAmount matureZerocoinBalance = zerocoinBalance - unconfirmedZerocoinBalance - immatureZerocoinBalance;
 
     // Set
+    QString totalCollateral= GUIUtil::formatBalance(LockedCollateralBalance, nDisplayUnit);
     QString totalEpg = GUIUtil::formatBalance(epgAvailableBalance, nDisplayUnit);
     //QString totalzEpg = GUIUtil::formatBalance(matureZerocoinBalance, nDisplayUnit, true);
     // Top
@@ -595,6 +590,7 @@ void TopBar::updateBalances(const CAmount& balance, const CAmount& unconfirmedBa
     // Expanded
     ui->labelAmountEpg->setText(totalEpg);
     //ui->labelAmountzEpg->setText(totalzEpg);
+    ui->labelAmountCollateral->setText(totalCollateral);
 
     ui->labelPendingEpg->setText(GUIUtil::formatBalance(unconfirmedBalance, nDisplayUnit));
     //ui->labelPendingzEpg->setText(GUIUtil::formatBalance(unconfirmedZerocoinBalance, nDisplayUnit, true));

@@ -8,6 +8,7 @@
 #include "optionsmodel.h"
 #include "pairresult.h"
 #include "activemasternode.h"
+#include "utilmoneystr.h"
 #include "qt/epgc/guitransactionsutils.h"
 #include <QFile>
 #include <QIntValidator>
@@ -44,6 +45,7 @@ MasterNodeWizardDialog::MasterNodeWizardDialog(WalletModel *model, QWidget *pare
     setCssProperty(ui->labelTitle1, "text-title-dialog");
     setCssProperty(ui->labelMessage1a, "text-main-grey");
     setCssProperty(ui->labelMessage1b, "text-main-purple");
+    ui->radioButtonTier1->setChecked(true);
 
     // Frame 3
     setCssProperty(ui->labelTitle3, "text-title-dialog");
@@ -89,6 +91,7 @@ MasterNodeWizardDialog::MasterNodeWizardDialog(WalletModel *model, QWidget *pare
     connect(ui->pushButtonSkip, SIGNAL(clicked()), this, SLOT(close()));
     connect(ui->btnNext, SIGNAL(clicked()), this, SLOT(onNextClicked()));
     connect(ui->btnBack, SIGNAL(clicked()), this, SLOT(onBackClicked()));
+    connect(ui->radioButtonTier2, SIGNAL(toggled(bool)), this, SLOT(radioButtonTier2(bool)));
 }
 
 void MasterNodeWizardDialog::showEvent(QShowEvent *event)
@@ -99,6 +102,7 @@ void MasterNodeWizardDialog::showEvent(QShowEvent *event)
 void MasterNodeWizardDialog::onNextClicked(){
     switch(pos){
         case 0:{
+            ui->labelMessage3->setText(tr("A transaction of %1 EPG will be made\r\nto a new empty address in your wallet.\r\nThe Address is labeled under the master node's name").arg(QString::fromStdString(FormatMoney(walletModel->getRequiredMasternodeCollateral(nTier)))));
             ui->stackedWidget->setCurrentIndex(1);
             ui->pushName4->setChecked(false);
             ui->pushName3->setChecked(true);
@@ -109,8 +113,7 @@ void MasterNodeWizardDialog::onNextClicked(){
             ui->lineEditName->setFocus();
             break;
         }
-        case 1:{
-
+        case 1:{  
             // No empty names accepted.
             if (ui->lineEditName->text().isEmpty()) {
                 setCssEditLine(ui->lineEditName, false, true);
@@ -128,8 +131,7 @@ void MasterNodeWizardDialog::onNextClicked(){
             ui->lineEditIpAddress->setFocus();
             break;
         }
-        case 2:{
-
+        case 2:{          
             // No empty address accepted
             if (ui->lineEditIpAddress->text().isEmpty()) {
                 return;
@@ -197,7 +199,7 @@ bool MasterNodeWizardDialog::createMN(){
         }
 
         // const QString& addr, const QString& label, const CAmount& amount, const QString& message
-        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  walletModel->getRequiredMasternodeCollateral() * COIN, "");
+        SendCoinsRecipient sendCoinsRecipient(QString::fromStdString(address.ToString()), QString::fromStdString(alias),  walletModel->getRequiredMasternodeCollateral(nTier), "");
 
         // Send the 10 tx to one of your address
         QList<SendCoinsRecipient> recipients;
@@ -293,7 +295,7 @@ bool MasterNodeWizardDialog::createMN(){
                 int indexOut = -1;
                 for (int i=0; i < (int)walletTx->vout.size(); i++){
                     CTxOut& out = walletTx->vout[i];
-                    if (out.nValue == walletModel->getRequiredMasternodeCollateral() * COIN){
+                    if ((out.nValue == walletModel->getRequiredMasternodeCollateral(nTier))) {
                         indexOut = i;
                     }
                 }
@@ -396,4 +398,9 @@ void MasterNodeWizardDialog::initBtn(std::initializer_list<QPushButton*> args){
 MasterNodeWizardDialog::~MasterNodeWizardDialog(){
     if(snackBar) delete snackBar;
     delete ui;
+}
+
+void MasterNodeWizardDialog::radioButtonTier2(bool checked)
+{
+    nTier = (checked) ? 2 : 1;
 }

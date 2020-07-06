@@ -212,7 +212,7 @@ void CMasternode::Check(bool forceCheck)
     if (!unitTest) {
         CValidationState state;
         CMutableTransaction tx = CMutableTransaction();
-        CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN, obfuScationPool.collateralPubKey);
+        CTxOut vout = CTxOut(Params().GetTierObfuscationValue(Tier()), obfuScationPool.collateralPubKey);
         tx.vin.push_back(vin);
         tx.vout.push_back(vout);
 
@@ -328,6 +328,75 @@ bool CMasternode::IsValidNetAddr()
            (IsReachable(addr) && addr.IsRoutable());
 }
 
+int CMasternode::Tier(CAmount vin_val)
+{
+    for (int nTier = 0; nTier <= CChainParams::MASTERNODE_TIER_COUNT; ++nTier) {
+        if (vin_val == Params().GetRequiredMasternodeCollateral(chainActive.Height(), nTier))
+            return nTier;
+    }
+
+    return 0;
+}
+
+int CMasternode::Tier(const CTxIn& vin)
+{
+    CAmount vin_val;
+
+    if(!IsDepositCoins(vin, vin_val))
+        return 0;
+
+    return Tier(vin_val);
+}
+
+int CMasternode::Tier()
+{
+    return Tier(vin);
+}
+
+bool CMasternode::IsDepositCoins(CAmount vin_val)
+{
+    return Tier(vin_val);
+}
+
+bool CMasternode::IsDepositCoins(const CTxIn& vin, CAmount& vin_val)
+{
+    CTransaction prevout_tx;
+    uint256      hashBlock = 0;
+
+    bool vin_valid =  GetTransaction(vin.prevout.hash, prevout_tx, hashBlock, true)
+                   && (vin.prevout.n < prevout_tx.vout.size());
+
+    if(!vin_valid)
+        return false;
+
+    CAmount vin_amount = prevout_tx.vout[vin.prevout.n].nValue;
+
+    if(!IsDepositCoins(vin_amount))
+        return false;
+
+    vin_val = vin_amount;
+    return true;
+}
+
+CAmount CMasternode::CollateralAmount(const CTxIn& vin)
+{
+    CTransaction prevout_tx;
+    uint256      hashBlock = 0;
+
+    bool vin_valid = GetTransaction(vin.prevout.hash, prevout_tx, hashBlock, true)
+                   && (vin.prevout.n < prevout_tx.vout.size());
+
+    if(!vin_valid)
+        return 0;
+
+    return prevout_tx.vout[vin.prevout.n].nValue;    
+}
+
+CAmount CMasternode::CollateralAmount()
+{
+    return CollateralAmount(vin);
+}
+
 bool CMasternode::IsInputAssociatedWithPubkey(int nTargetHeight) const
 {
     CScript payee;
@@ -337,7 +406,7 @@ bool CMasternode::IsInputAssociatedWithPubkey(int nTargetHeight) const
     uint256 hash;
     if(GetTransaction(vin.prevout.hash, txVin, hash, true)) {
         for (CTxOut out : txVin.vout) {
-            if (out.nValue == Params().GetRequiredMasternodeCollateral(nTargetHeight) * COIN && out.scriptPubKey == payee) return true;
+            if (IsMasternodeCollateral(nTargetHeight, out.nValue) && out.scriptPubKey == payee) return true;
         }
     }
 
@@ -615,7 +684,7 @@ bool CMasternodeBroadcast::CheckInputsAndAdd(int& nDoS)
 
     CValidationState state;
     CMutableTransaction tx = CMutableTransaction();
-    CTxOut vout = CTxOut((Params().GetRequiredMasternodeCollateral(chainActive.Height()) - 0.01) * COIN, obfuScationPool.collateralPubKey);
+    CTxOut vout = CTxOut(Params().GetTierObfuscationValue(Tier()), obfuScationPool.collateralPubKey);
     tx.vin.push_back(vin);
     tx.vout.push_back(vout);
 

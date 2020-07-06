@@ -368,7 +368,7 @@ bool Stake(const CBlockIndex* pindexPrev, CStakeInput* stakeInput, unsigned int 
     if (Params().IsTimeProtocolV2(nHeight)) {
         // check required min depth for stake
         const int nHeightBlockFrom = pindexFrom->nHeight;
-        if (nHeight < nHeightBlockFrom + Params().COINSTAKE_MIN_DEPTH())
+        if ((nHeight < Params().MultiTierStartBlock()) - 1 && (nHeight < nHeightBlockFrom + Params().COINSTAKE_MIN_DEPTH()))
             return error("%s : min depth violation, nHeight=%d, nHeightBlockFrom=%d", __func__, nHeight, nHeightBlockFrom);
 
         nTimeTx = GetCurrentTimeSlot();

@@ -2404,6 +2404,12 @@ HHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH*/
     font-size:16px;
 }
 
+*[cssClass="text-warning-dialog"] {
+    color:red;
+    font-size:16px;
+    font-weight: bold;
+}
+
 *[cssClass="text-title1-dialog"] {
     color:#fbff88;
     font-size:22px;

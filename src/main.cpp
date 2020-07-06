@@ -1185,9 +1185,11 @@ bool CheckTransaction(const CTransaction& tx, bool fZerocoinActive, bool fReject
         if (txout.nValue < 0)
             return state.DoS(100, error("CheckTransaction() : txout.nValue negative"),
                 REJECT_INVALID, "bad-txns-vout-negative");
-        if (txout.nValue > Params().MaxMoneyOut())
+        if (txout.nValue > Params().MaxMoneyOut()) {
+            LogPrintf("txout.nValue too high: %i > %s\n", FormatMoney(txout.nValue), FormatMoney(Params().MaxMoneyOut()));
             return state.DoS(100, error("CheckTransaction() : txout.nValue too high"),
                 REJECT_INVALID, "bad-txns-vout-toolarge");
+        }
         nValueOut += txout.nValue;
         if (!MoneyRange(nValueOut))
             return state.DoS(100, error("CheckTransaction() : txout total out of range"),
@@ -2009,26 +2011,29 @@ int64_t GetBlockValue(int nHeight)
     }
 
     int64_t nSubsidy = 0;
-    if (nHeight == 1) {
+    if (nHeight == 1) 
         nSubsidy = 200000 * COIN;
-    }
-    else if (nHeight < 28032) {
+    
+    else if (nHeight < 28032) 
         nSubsidy = 1 * COIN;
-    }  
-    else if (nHeight < 45501) {
+     
+    else if (nHeight < 45501) 
         nSubsidy = 2 * COIN;
-    }  
-    else if (nHeight < 46033) {
+     
+    else if (nHeight < 46033) 
         nSubsidy = 7 * COIN;
-    }
-    else {
+    
+    else if (nHeight < Params().MultiTierStartBlock())
         nSubsidy =  COIN * 130/100;
-    }
+    
+    else 
+        nSubsidy =  COIN * 1.4;
+
     return nSubsidy;
 }
 
 
-int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake)
+int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCount, bool isZEPGStake, int nTier)
 {
     int64_t ret = 0;
 
@@ -2037,18 +2042,20 @@ int64_t GetMasternodePayment(int nHeight, int64_t blockValue, int nMasternodeCou
             return 0;
     }
 
-    if (nHeight <= Params().LAST_POW_BLOCK()) {
+    if (nHeight <= Params().LAST_POW_BLOCK())
         ret = 0;
-    } 
-    else if (nHeight < 10001) {
+
+    else if (nHeight < 10001)
         ret = blockValue * 60 / 100;
-    } 
-    else if (nHeight < 46032) {
+
+    else if (nHeight < 46032)
         ret = blockValue * 848 / 1000;
-    } 
-    else {
-        ret =  1 * COIN;;
-    }
+
+    else if (nHeight < Params().MultiTierStartBlock())
+        ret = 1 * COIN;
+
+    else
+        ret = Params().GetMasternodeTierReward(nHeight, nTier);
 
     return ret;
 }
@@ -2059,17 +2066,20 @@ int64_t GetDevelopersPayment(int nHeight, int64_t blockValue, bool isZEPGStake) 
     if (isZEPGStake)
             return 0;
 
-    if (nHeight <= Params().LAST_POW_BLOCK()) {
+    if (nHeight <= Params().LAST_POW_BLOCK())
         ret = 0.0;
-    } else if (nHeight < 10001) {
+
+    else if (nHeight < 10001) 
         ret = blockValue * 398 / 1000;
-    }
-    else if (nHeight < 46032) {
+    
+    else if (nHeight < 46032) 
         ret = blockValue * 15 / 100;
-    }
-    else {
+    
+    else if (nHeight < Params().MultiTierStartBlock())
         ret = COIN *28/100;
-    }
+
+    else
+        ret = COIN * 0.198;
 
     return ret;
 }
@@ -2348,10 +2358,18 @@ bool CheckInputs(const CTransaction& tx, CValidationState& state, const CCoinsVi
 
             // If prev is coinbase, check that it's matured
             if (coins->IsCoinBase() || coins->IsCoinStake()) {
-                if (nSpendHeight - coins->nHeight < Params().COINBASE_MATURITY())
+                if (nSpendHeight - coins->nHeight < Params().COINBASE_MATURITY(coins->nHeight))
                     return state.Invalid(
                         error("CheckInputs() : tried to spend coinbase at depth %d, coinstake=%d", nSpendHeight - coins->nHeight, coins->IsCoinStake()),
                         REJECT_INVALID, "bad-txns-premature-spend-of-coinbase");
+            }
+
+            // if prev is collateral amount, check that it's matured
+            if (!fMasterNode && IsMasternodeCollateral(chainActive.Height(), coins->vout[prevout.n].nValue)) {
+                if (nSpendHeight - coins->nHeight < Params().COLLATERAL_MATURITY() && nSpendHeight > Params().CollateralMaturityEnforcementHeight())
+                    return state.Invalid(
+                         error("CheckInputs() : tried to spend collateral at depth %d", nSpendHeight - coins->nHeight),
+                         REJECT_INVALID, "bad-txns-premature-spend-of-collateral");
             }
 
             // Check for negative or overflow input values
@@ -3146,13 +3164,17 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     nTimeConnect += nTime1 - nTimeStart;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime1 - nTimeStart), 0.001 * (nTime1 - nTimeStart) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime1 - nTimeStart) / (nInputs - 1), nTimeConnect * 0.000001);
 
-    //PoW phase redistributed fees to miner. PoS stage destroys fees.
-    CAmount nExpectedMint = GetBlockValue(pindex->pprev->nHeight + 1);
+    // PoW phase redistributed fees to miner. PoS stage destroys fees.
+    // Since multi-tier activation fixed issue with FillBlockPayee misalignment
+    CAmount nExpectedMint = (pindex->nHeight >= Params().MultiTierStartBlock()) 
+        ? GetBlockValue(pindex->pprev->nHeight)
+        : GetBlockValue(pindex->pprev->nHeight + 1);    // for compatibility with older blocks
     if (block.IsProofOfWork())
         nExpectedMint += nFees;
 
     //Check that the block does not overmint
     if (!IsBlockValueValid(block, nExpectedMint, pindex->nMint)) {
+        LogPrintf("%s: DEBUG: expected height %i - %i val %s\n", __func__, (pindex->pprev->nHeight + 1), pindex->nHeight, FormatMoney(GetBlockValue(pindex->nHeight)));
         return state.DoS(100, error("ConnectBlock() : reward pays too much (actual=%s vs limit=%s)",
                                     FormatMoney(pindex->nMint), FormatMoney(nExpectedMint)),
                          REJECT_INVALID, "bad-cb-amount");
@@ -7369,6 +7391,17 @@ std::string CBlockFileInfo::ToString() const
     return strprintf("CBlockFileInfo(blocks=%u, size=%u, heights=%u...%u, time=%s...%s)", nBlocks, nSize, nHeightFirst, nHeightLast, DateTimeStrFormat("%Y-%m-%d", nTimeFirst), DateTimeStrFormat("%Y-%m-%d", nTimeLast));
 }
 
+bool IsMasternodeCollateral(int nTargetHeight, CAmount nInputAmount)
+{
+    int fromTier = (nTargetHeight <= Params().NoTierLastBlock()) ? 0 : 1;
+    int toTier = (nTargetHeight < Params().MultiTierStartBlock()) ? 0 : CChainParams::MASTERNODE_TIER_COUNT;
+
+    for (int nTier = fromTier; nTier <= toTier; ++nTier)
+        if (nInputAmount == (Params().GetRequiredMasternodeCollateral(nTargetHeight, nTier)))
+            return true;
+
+    return false;
+}
 
 class CMainCleanup
 {
