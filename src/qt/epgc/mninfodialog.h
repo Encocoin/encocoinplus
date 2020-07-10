@@ -26,7 +26,7 @@ public:
 
     void setData(QString privKey, QString name, QString address, QString txId, QString outputIndex, QString status, QString tier, QString collateral);
 
-public slots:
+public Q_SLOTS:
     void closeDialog();
 
 private:
