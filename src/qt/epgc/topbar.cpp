@@ -43,7 +43,7 @@ TopBar::TopBar(EPGCGUI* _mainWindow, QWidget *parent) :
     setCssProperty(lblTitles, "text-title-topbar");
     QFont font;
     font.setWeight(QFont::Light);
-    foreach (QWidget* w, lblTitles) { w->setFont(font); }
+    Q_FOREACH (QWidget* w, lblTitles) { w->setFont(font); }
 
     // Amount information top
     ui->widgetTopAmount->setVisible(false);
@@ -139,7 +139,7 @@ void TopBar::onThemeClicked(){
     }
     updateStyle(ui->pushButtonTheme);
 
-    emit themeChanged(lightTheme);
+    Q_EMIT themeChanged(lightTheme);
 }
 
 
@@ -330,7 +330,7 @@ void TopBar::onColdStakingClicked() {
     ui->pushButtonColdStaking->setButtonText(text);
     updateStyle(ui->pushButtonColdStaking);
 
-    emit onShowHideColdStakingChanged(show);
+    Q_EMIT onShowHideColdStakingChanged(show);
 }
 
 TopBar::~TopBar(){
@@ -423,7 +423,7 @@ void TopBar::setNumBlocks(int count) {
     bool needState = true;
     if (masternodeSync.IsBlockchainSynced()) {
         // chain synced
-        emit walletSynced(true);
+        Q_EMIT walletSynced(true);
         if (masternodeSync.IsSynced()) {
             // Node synced
 	    ui->pushButtonSync->setButtonText(tr("Synchronized - Block: %1").arg(QString::number(count)));
@@ -446,7 +446,7 @@ void TopBar::setNumBlocks(int count) {
             }
         }
     } else {
-        emit walletSynced(false);
+        Q_EMIT walletSynced(false);
     }
 
     if(needState) {

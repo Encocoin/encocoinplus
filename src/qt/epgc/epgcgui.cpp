@@ -239,7 +239,7 @@ EPGCGUI::~EPGCGUI() {
 /** Get restart command-line parameters and request restart */
 void EPGCGUI::handleRestart(QStringList args){
     if (!ShutdownRequested())
-        emit requestedRestart(args);
+        Q_EMIT requestedRestart(args);
 }
 
 
@@ -513,7 +513,7 @@ void EPGCGUI::changeTheme(bool isLightTheme){
     this->setStyleSheet(css);
 
     // Notify
-    emit themeChanged(isLightTheme, css);
+    Q_EMIT themeChanged(isLightTheme, css);
 
     // Update style
     updateStyle(this);
@@ -525,7 +525,7 @@ void EPGCGUI::resizeEvent(QResizeEvent* event){
     // background
     showHide(opEnabled);
     // Notify
-    emit windowResizeEvent(event);
+    Q_EMIT windowResizeEvent(event);
 }
 
 bool EPGCGUI::execDialog(QDialog *dialog, int xDiv, int yDiv){

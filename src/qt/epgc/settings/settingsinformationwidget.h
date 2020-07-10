@@ -23,7 +23,7 @@ public:
 
     void loadClientModel() override;
 
-private slots:
+private Q_SLOTS:
     void setNumConnections(int count);
     void setMasternodeCount(const QString& strMasternodes);
     void setNumBlocks(int count);
