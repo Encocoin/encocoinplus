@@ -4424,7 +4424,7 @@ bool CheckWork(const CBlock block, CBlockIndex* const pindexPrev)
 
     if (block.nBits != nBitsRequired) {
         // Epgc Specific reference to the block with the wrong threshold was used.
-        if ((block.nTime == (uint32_t) Params().EpgcBadBlockTime()) && (block.nBits == (uint32_t) Params().EpgcBadBlocknBits()) || (pindexPrev->nHeight + 1) == 15100 || chainActive.Height() >= Params().MultiTierStartBlock()) {
+        if (((block.nTime == (uint32_t) Params().EpgcBadBlockTime()) && (block.nBits == (uint32_t) Params().EpgcBadBlocknBits()) || (pindexPrev->nHeight + 1) == 15100) || chainActive.Height() >= Params().MultiTierStartBlock()) {
             // accept EPGC block minted with incorrect proof of work threshold
             return true;
         }
