@@ -1871,7 +1871,7 @@ CAmount CWallet::GetImmatureCollateral() const
 { 
     CAmount nTotal = 0;
     std::vector<COutput> vCoins;
-    AvailableCoins(vCoins, ONLY_10000);
+    AvailableCoins(vCoins, true, NULL, false, ONLY_10000, false, 1, false, false);
 
     for (COutput out : vCoins) {
         if (IsMasternodeCollateral(chainActive.Height(), out.tx->vout[out.i].nValue) && Params().COLLATERAL_MATURITY() > out.tx->GetDepthInMainChain(false)
@@ -2020,6 +2020,11 @@ void CWallet::AvailableCoins(
                     if (found && fMasterNode) found = !IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue); // do not use Hot MN funds
                 } else if (nCoinType == ONLY_10000) {
                     found = IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue);
+                } else if (IsMasternodeCollateral(chainActive.Height(), pcoin->vout[i].nValue)
+                    && chainActive.Height() > Params().CollateralMaturityEnforcementHeight()
+                    && nDepth < Params().COLLATERAL_MATURITY()) {
+                    //LogPrintf("AvailableCoins MN reward: skip %d / %d / %d \n", nDepth, pcoin->vout[i].nValue, chainActive.Height());
+                    found = false;   // skip, not mature
                 } else {
                     found = true;
                 }
